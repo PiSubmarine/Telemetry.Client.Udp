@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "PiSubmarine/Error/Api/MakeError.h"
+
 namespace PiSubmarine::Telemetry::Client::Udp
 {
     Client::Client(
@@ -20,6 +22,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
         , m_ServerEndpoint(std::move(serverEndpoint))
         , m_AcquireRetryInterval(std::chrono::duration_cast<std::chrono::nanoseconds>(acquireRetryInterval))
         , m_SubscribeRetryInterval(std::chrono::duration_cast<std::chrono::nanoseconds>(subscribeRetryInterval))
+        , m_LastError(Error::Api::MakeError(Error::Api::ErrorCondition::CommunicationError))
     {
     }
 
@@ -33,9 +36,15 @@ namespace PiSubmarine::Telemetry::Client::Udp
         [[maybe_unused]] const auto releaseResult = m_LeaseIssuer.ReleaseLease(m_Lease->Id);
     }
 
-    Api::Snapshot Client::GetSnapshot() const
+    Error::Api::Result<Api::Snapshot> Client::GetSnapshot() const
     {
-        return m_Snapshot;
+        if (!m_Snapshot.has_value())
+        {
+            return std::unexpected(m_LastError.value_or(
+                Error::Api::MakeError(Error::Api::ErrorCondition::UnknownError)));
+        }
+
+        return *m_Snapshot;
     }
 
     void Client::Tick(const std::chrono::nanoseconds& uptime, const std::chrono::nanoseconds& deltaTime)
@@ -79,11 +88,13 @@ namespace PiSubmarine::Telemetry::Client::Udp
             .Resource = MakeTelemetryResourceId()});
         if (!acquireResult.has_value())
         {
+            m_LastError = acquireResult.error();
             m_NextAcquireAttempt = uptime + m_AcquireRetryInterval;
             return false;
         }
 
         m_Lease = *acquireResult;
+        m_LastError.reset();
         m_NextRenewTime = uptime + ComputeRenewInterval(*m_Lease);
         m_NextSubscribeAttempt = uptime;
         m_IsSubscriptionPending = true;
@@ -100,6 +111,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
         const auto renewResult = m_LeaseIssuer.RenewLease(m_Lease->Id);
         if (!renewResult.has_value())
         {
+            m_LastError = renewResult.error();
             m_Lease.reset();
             m_NextAcquireAttempt = uptime + m_AcquireRetryInterval;
             m_IsSubscriptionPending = false;
@@ -107,6 +119,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
         }
 
         m_Lease = *renewResult;
+        m_LastError.reset();
         m_NextRenewTime = uptime + ComputeRenewInterval(*m_Lease);
         m_NextSubscribeAttempt = uptime;
         m_IsSubscriptionPending = true;
@@ -132,10 +145,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
 
         if (!sendResult.has_value())
         {
+            m_LastError = sendResult.error();
             m_NextSubscribeAttempt = uptime + m_SubscribeRetryInterval;
             return;
         }
 
+        m_LastError.reset();
         m_IsSubscriptionPending = false;
     }
 
@@ -152,10 +167,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
             const auto deserializeResult = m_Deserializer.Deserialize(receiveResult->value().Payload);
             if (!deserializeResult.has_value())
             {
+                m_LastError = deserializeResult.error();
                 continue;
             }
 
             m_Snapshot = *deserializeResult;
+            m_LastError.reset();
         }
     }
 }

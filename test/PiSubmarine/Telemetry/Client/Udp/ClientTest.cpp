@@ -1,6 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "PiSubmarine/Error/Api/ErrorCondition.h"
 #include "PiSubmarine/Lease/Api/ILeaseIssuerMock.h"
 #include "PiSubmarine/Telemetry/Client/Udp/Client.h"
 #include "PiSubmarine/Telemetry/IDeserializerMock.h"
@@ -51,6 +52,10 @@ namespace PiSubmarine::Telemetry::Client::Udp
             .WillOnce(Return(Error::Api::Result<void>{}));
 
         client.Tick(std::chrono::seconds(1), std::chrono::milliseconds(10));
+
+        const auto snapshot = client.GetSnapshot();
+        ASSERT_FALSE(snapshot.has_value());
+        EXPECT_EQ(snapshot.error().Condition, Error::Api::ErrorCondition::UnknownError);
     }
 
     TEST(ClientTest, RenewsLeaseAndResubscribesWhenLeaseIsNearExpiry)
@@ -130,6 +135,8 @@ namespace PiSubmarine::Telemetry::Client::Udp
 
         client.Tick(std::chrono::seconds(1), std::chrono::milliseconds(10));
 
-        EXPECT_EQ(client.GetSnapshot(), expectedSnapshot);
+        const auto snapshot = client.GetSnapshot();
+        ASSERT_TRUE(snapshot.has_value());
+        EXPECT_EQ(*snapshot, expectedSnapshot);
     }
 }

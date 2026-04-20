@@ -3,6 +3,7 @@
 #include <chrono>
 #include <optional>
 
+#include "PiSubmarine/Error/Api/Error.h"
 #include "PiSubmarine/Lease/Api/ILeaseIssuer.h"
 #include "PiSubmarine/Telemetry/Api/ISource.h"
 #include "PiSubmarine/Telemetry/IDeserializer.h"
@@ -26,7 +27,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
 
         ~Client() override;
 
-        [[nodiscard]] Api::Snapshot GetSnapshot() const override;
+        [[nodiscard]] Error::Api::Result<Api::Snapshot> GetSnapshot() const override;
         void Tick(const std::chrono::nanoseconds& uptime, const std::chrono::nanoseconds& deltaTime) override;
 
     private:
@@ -45,7 +46,8 @@ namespace PiSubmarine::Telemetry::Client::Udp
         std::chrono::nanoseconds m_AcquireRetryInterval;
         std::chrono::nanoseconds m_SubscribeRetryInterval;
 
-        Api::Snapshot m_Snapshot{};
+        std::optional<Api::Snapshot> m_Snapshot;
+        std::optional<Error::Api::Error> m_LastError;
         std::optional<Lease::Api::Lease> m_Lease;
         std::chrono::nanoseconds m_NextAcquireAttempt{0};
         std::chrono::nanoseconds m_NextRenewTime{0};
