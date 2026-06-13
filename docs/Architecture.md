@@ -1,7 +1,7 @@
 # Telemetry.Client.Udp
 
-`PiSubmarine.Telemetry.Client.Udp` provides a remote telemetry source that looks
-like a local `Telemetry.Api::ISource` to its consumers.
+`PiSubmarine.Telemetry.Client.Udp` provides a remote raw telemetry cache and a
+per-channel raw source adapter.
 
 ## Responsibility
 
@@ -10,14 +10,15 @@ This module owns:
 - automatic acquisition and renewal of the telemetry lease
 - sending UDP subscription packets containing the current `LeaseId`
 - receiving UDP telemetry datagrams
-- deserializing telemetry payloads into `Telemetry.Api::Snapshot`
-- exposing the latest received snapshot through `Telemetry.Api::ISource`
+- decoding UDP telemetry datagrams into `ChannelId -> raw payload` entries
+- exposing the latest received payloads through `Telemetry.Api::IRawCache`
+- exposing individual channels through `Telemetry.Client.Udp::Source`
 
 It does not own:
 
 - lease issuance policy
 - UDP socket implementation
-- telemetry payload format
+- domain-specific telemetry deserialization
 
 ## Runtime model
 
@@ -27,5 +28,5 @@ The client is tick-driven.
 - After acquiring or renewing a lease, it sends a UDP subscription packet whose
   payload is just the raw `LeaseId`.
 - It renews the lease halfway through the reported lease duration.
-- It drains received UDP datagrams each tick and updates the cached snapshot
-  whenever deserialization succeeds.
+- It drains received UDP datagrams each tick and replaces the cached raw
+  channel map whenever a datagram can be decoded successfully.
