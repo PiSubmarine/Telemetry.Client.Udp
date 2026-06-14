@@ -9,7 +9,7 @@
 #include "PiSubmarine/Error/Api/Error.h"
 #include "PiSubmarine/Lease/Api/ILeaseIssuer.h"
 #include "PiSubmarine/Security/Aead/Api/IProvider.h"
-#include "PiSubmarine/Security/Nonce/Api/IProvider.h"
+#include "PiSubmarine/Security/Api/INonceProvider.h"
 #include "PiSubmarine/Telemetry/Api/ChannelId.h"
 #include "PiSubmarine/Telemetry/Api/IRawCache.h"
 #include "PiSubmarine/Time/ITickable.h"
@@ -24,7 +24,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
         Client(
             Lease::Api::ILeaseIssuer& leaseIssuer,
             const ::PiSubmarine::Security::Aead::Api::IProvider& aeadProvider,
-            ::PiSubmarine::Security::Nonce::Api::IProvider& nonceProvider,
+            ::PiSubmarine::Security::Api::INonceProvider& nonceProvider,
             ::PiSubmarine::Udp::Api::IReceiver& receiver,
             ::PiSubmarine::Udp::Api::ISender& sender,
             ::PiSubmarine::Udp::Api::Endpoint serverEndpoint,
@@ -46,7 +46,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
 
         Lease::Api::ILeaseIssuer& m_LeaseIssuer;
         const ::PiSubmarine::Security::Aead::Api::IProvider& m_AeadProvider;
-        ::PiSubmarine::Security::Nonce::Api::IProvider& m_NonceProvider;
+        ::PiSubmarine::Security::Api::INonceProvider& m_NonceProvider;
         ::PiSubmarine::Udp::Api::IReceiver& m_Receiver;
         ::PiSubmarine::Udp::Api::ISender& m_Sender;
         ::PiSubmarine::Udp::Api::Endpoint m_ServerEndpoint;

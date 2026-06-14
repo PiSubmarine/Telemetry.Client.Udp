@@ -11,8 +11,8 @@
 #include "PiSubmarine/Error/Api/ErrorCondition.h"
 #include "PiSubmarine/Error/Api/MakeError.h"
 #include "PiSubmarine/Lease/Api/ILeaseIssuerMock.h"
+#include "PiSubmarine/Security/Api/INonceProviderMock.h"
 #include "PiSubmarine/Security/Aead/Api/IProviderMock.h"
-#include "PiSubmarine/Security/Nonce/Api/IProviderMock.h"
 #include "PiSubmarine/Telemetry/Api/IRawCacheMock.h"
 #include "PiSubmarine/Telemetry/Client/Udp/Client.h"
 #include "PiSubmarine/Telemetry/Client/Udp/Source.h"
@@ -113,7 +113,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
     {
         StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
         StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
-        StrictMock<Security::Nonce::Api::IProviderMock> nonceProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
         StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
         StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
 
@@ -129,11 +129,11 @@ namespace PiSubmarine::Telemetry::Client::Udp
                         .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"}}))
             .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
         EXPECT_CALL(nonceProvider, Next())
-            .WillOnce(Return(Error::Api::Result<Security::Nonce::Api::Nonce>(
-                Security::Nonce::Api::Nonce{.Value = {std::byte{0xAA}, std::byte{0xBB}}})));
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0xAA}, std::byte{0xBB}}})));
         EXPECT_CALL(aeadProvider, Seal(
                         MakeKey(),
-                        Security::Nonce::Api::Nonce{.Value = {std::byte{0xAA}, std::byte{0xBB}}},
+                        Security::Api::Nonce{.Value = {std::byte{0xAA}, std::byte{0xBB}}},
                         Security::Aead::Api::Plaintext{},
                         MakeAssociatedData()))
             .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
@@ -164,7 +164,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
     {
         StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
         StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
-        StrictMock<Security::Nonce::Api::IProviderMock> nonceProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
         StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
         StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
 
@@ -179,10 +179,10 @@ namespace PiSubmarine::Telemetry::Client::Udp
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
             .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
         EXPECT_CALL(nonceProvider, Next())
-            .WillOnce(Return(Error::Api::Result<Security::Nonce::Api::Nonce>(
-                Security::Nonce::Api::Nonce{.Value = {std::byte{0x01}}})))
-            .WillOnce(Return(Error::Api::Result<Security::Nonce::Api::Nonce>(
-                Security::Nonce::Api::Nonce{.Value = {std::byte{0x02}}})));
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x01}}})))
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x02}}})));
         EXPECT_CALL(aeadProvider, Seal(_, _, Security::Aead::Api::Plaintext{}, _))
             .Times(2)
             .WillRepeatedly(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
@@ -210,7 +210,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
     {
         StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
         StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
-        StrictMock<Security::Nonce::Api::IProviderMock> nonceProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
         StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
         StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
 
@@ -229,8 +229,8 @@ namespace PiSubmarine::Telemetry::Client::Udp
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
             .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
         EXPECT_CALL(nonceProvider, Next())
-            .WillOnce(Return(Error::Api::Result<Security::Nonce::Api::Nonce>(
-                Security::Nonce::Api::Nonce{.Value = {std::byte{0x01}}})));
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x01}}})));
         EXPECT_CALL(aeadProvider, Seal(_, _, Security::Aead::Api::Plaintext{}, _))
             .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
                 Security::Aead::Api::Ciphertext{.Value = {std::byte{0x99}}})));
@@ -245,7 +245,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
                 std::optional<::PiSubmarine::Udp::Api::Datagram>{std::nullopt})));
         EXPECT_CALL(aeadProvider, Open(
                         MakeKey(),
-                        Security::Nonce::Api::Nonce{.Value = {std::byte{0x10}}},
+                        Security::Api::Nonce{.Value = {std::byte{0x10}}},
                         Security::Aead::Api::Ciphertext{.Value = {std::byte{0x20}, std::byte{0x21}}},
                         MakeAssociatedData()))
             .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Plaintext>(
@@ -268,7 +268,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
     {
         StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
         StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
-        StrictMock<Security::Nonce::Api::IProviderMock> nonceProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
         StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
         StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
 
@@ -283,8 +283,8 @@ namespace PiSubmarine::Telemetry::Client::Udp
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
             .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
         EXPECT_CALL(nonceProvider, Next())
-            .WillOnce(Return(Error::Api::Result<Security::Nonce::Api::Nonce>(
-                Security::Nonce::Api::Nonce{.Value = {std::byte{0x01}}})));
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x01}}})));
         EXPECT_CALL(aeadProvider, Seal(_, _, Security::Aead::Api::Plaintext{}, _))
             .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
                 Security::Aead::Api::Ciphertext{.Value = {std::byte{0x99}}})));
@@ -314,7 +314,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
     {
         StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
         StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
-        StrictMock<Security::Nonce::Api::IProviderMock> nonceProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
         StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
         StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
 
@@ -329,8 +329,8 @@ namespace PiSubmarine::Telemetry::Client::Udp
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
             .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
         EXPECT_CALL(nonceProvider, Next())
-            .WillOnce(Return(Error::Api::Result<Security::Nonce::Api::Nonce>(
-                Security::Nonce::Api::Nonce{.Value = {std::byte{0x01}}})));
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x01}}})));
         EXPECT_CALL(aeadProvider, Seal(_, _, Security::Aead::Api::Plaintext{}, _))
             .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
                 Security::Aead::Api::Ciphertext{.Value = {std::byte{0x99}}})));
