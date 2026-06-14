@@ -182,7 +182,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
             return false;
         }
 
-        m_Lease = *acquireResult;
+        m_Lease = acquireResult->Lease;
         m_LastError.reset();
         m_NextRenewTime = uptime + ComputeRenewInterval(*m_Lease);
         m_NextSubscribeAttempt = uptime;

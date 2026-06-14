@@ -64,10 +64,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
 
         EXPECT_CALL(leaseIssuer, AcquireLease(Lease::Api::LeaseRequest{
                         .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"}}))
-            .WillOnce(Return(Error::Api::Result<Lease::Api::Lease>(Lease::Api::Lease{
-                .Id = Lease::Api::LeaseId{.Value = "lease-1"},
-                .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
-                .Duration = std::chrono::milliseconds(3000)})));
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(Lease::Api::LeaseGrant{
+                .Lease = Lease::Api::Lease{
+                    .Id = Lease::Api::LeaseId{.Value = "lease-1"},
+                    .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
+                    .Duration = std::chrono::milliseconds(3000)},
+                .Secret = Lease::Api::LeaseSecret{.Value = {std::byte{0x01}}}})));
         EXPECT_CALL(sender, Send(::testing::Truly([](const ::PiSubmarine::Udp::Api::Datagram& datagram)
             {
                 return datagram.Peer == ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000}
@@ -102,10 +104,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
             ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000});
 
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
-            .WillOnce(Return(Error::Api::Result<Lease::Api::Lease>(Lease::Api::Lease{
-                .Id = Lease::Api::LeaseId{.Value = "lease-1"},
-                .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
-                .Duration = std::chrono::milliseconds(3000)})));
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(Lease::Api::LeaseGrant{
+                .Lease = Lease::Api::Lease{
+                    .Id = Lease::Api::LeaseId{.Value = "lease-1"},
+                    .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
+                    .Duration = std::chrono::milliseconds(3000)},
+                .Secret = Lease::Api::LeaseSecret{.Value = {std::byte{0x01}}}})));
         EXPECT_CALL(sender, Send(_))
             .WillOnce(Return(Error::Api::Result<void>{}))
             .WillOnce(Return(Error::Api::Result<void>{}));
@@ -138,10 +142,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
             ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000});
 
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
-            .WillOnce(Return(Error::Api::Result<Lease::Api::Lease>(Lease::Api::Lease{
-                .Id = Lease::Api::LeaseId{.Value = "lease-1"},
-                .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
-                .Duration = std::chrono::milliseconds(3000)})));
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(Lease::Api::LeaseGrant{
+                .Lease = Lease::Api::Lease{
+                    .Id = Lease::Api::LeaseId{.Value = "lease-1"},
+                    .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
+                    .Duration = std::chrono::milliseconds(3000)},
+                .Secret = Lease::Api::LeaseSecret{.Value = {std::byte{0x01}}}})));
         EXPECT_CALL(sender, Send(_))
             .WillOnce(Return(Error::Api::Result<void>{}));
         EXPECT_CALL(receiver, TryReceive())
@@ -180,10 +186,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
             ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000});
 
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
-            .WillOnce(Return(Error::Api::Result<Lease::Api::Lease>(Lease::Api::Lease{
-                .Id = Lease::Api::LeaseId{.Value = "lease-1"},
-                .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
-                .Duration = std::chrono::milliseconds(3000)})));
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(Lease::Api::LeaseGrant{
+                .Lease = Lease::Api::Lease{
+                    .Id = Lease::Api::LeaseId{.Value = "lease-1"},
+                    .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
+                    .Duration = std::chrono::milliseconds(3000)},
+                .Secret = Lease::Api::LeaseSecret{.Value = {std::byte{0x01}}}})));
         EXPECT_CALL(sender, Send(_))
             .WillOnce(Return(Error::Api::Result<void>{}));
         EXPECT_CALL(receiver, TryReceive())
@@ -216,10 +224,12 @@ namespace PiSubmarine::Telemetry::Client::Udp
             ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000});
 
         EXPECT_CALL(leaseIssuer, AcquireLease(_))
-            .WillOnce(Return(Error::Api::Result<Lease::Api::Lease>(Lease::Api::Lease{
-                .Id = Lease::Api::LeaseId{.Value = "lease-1"},
-                .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
-                .Duration = std::chrono::milliseconds(3000)})));
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(Lease::Api::LeaseGrant{
+                .Lease = Lease::Api::Lease{
+                    .Id = Lease::Api::LeaseId{.Value = "lease-1"},
+                    .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
+                    .Duration = std::chrono::milliseconds(3000)},
+                .Secret = Lease::Api::LeaseSecret{.Value = {std::byte{0x01}}}})));
         EXPECT_CALL(sender, Send(_))
             .WillOnce(Return(Error::Api::Result<void>{}));
         EXPECT_CALL(receiver, TryReceive())
