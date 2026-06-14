@@ -12,6 +12,12 @@ PiSubmarineInitTarget(${PISUBMARINE_MODULE_NAME})
 PiSubmarineAddDependency("https://github.com/PiSubmarine/Lease.Api.git" "")
 target_link_libraries(${PISUBMARINE_MODULE_NAME} PUBLIC PiSubmarine.Lease.Api)
 
+PiSubmarineAddDependency("https://github.com/PiSubmarine/Security.Aead.Api.git" "")
+target_link_libraries(${PISUBMARINE_MODULE_NAME} PUBLIC PiSubmarine.Security.Aead.Api)
+
+PiSubmarineAddDependency("https://github.com/PiSubmarine/Security.Nonce.Api.git" "")
+target_link_libraries(${PISUBMARINE_MODULE_NAME} PUBLIC PiSubmarine.Security.Nonce.Api)
+
 PiSubmarineAddDependency("https://github.com/PiSubmarine/Telemetry.Api.git" "")
 target_link_libraries(${PISUBMARINE_MODULE_NAME} PUBLIC PiSubmarine.Telemetry.Api)
 
