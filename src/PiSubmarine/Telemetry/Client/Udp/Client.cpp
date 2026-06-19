@@ -289,6 +289,11 @@ namespace PiSubmarine::Telemetry::Client::Udp
             .Resource = MakeTelemetryResourceId()});
         if (!acquireResult.has_value())
         {
+            if (acquireResult.error().Condition == Error::Api::ErrorCondition::NotReady)
+            {
+                return false;
+            }
+
             m_LastError = acquireResult.error();
             m_NextAcquireAttempt = uptime + m_AcquireRetryInterval;
             return false;
@@ -313,6 +318,11 @@ namespace PiSubmarine::Telemetry::Client::Udp
         const auto renewResult = m_LeaseIssuer.RenewLease(m_Lease->Id);
         if (!renewResult.has_value())
         {
+            if (renewResult.error().Condition == Error::Api::ErrorCondition::NotReady)
+            {
+                return;
+            }
+
             m_LastError = renewResult.error();
             m_Lease.reset();
             m_LeaseSecret.reset();

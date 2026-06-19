@@ -206,6 +206,83 @@ namespace PiSubmarine::Telemetry::Client::Udp
         client.Tick(std::chrono::milliseconds(2500), std::chrono::milliseconds(10));
     }
 
+    TEST(ClientTest, RetriesAcquireWithoutBackoffWhenLeaseIssuerReturnsNotReady)
+    {
+        StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
+        StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
+        StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
+        StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
+
+        Client client(
+            leaseIssuer,
+            aeadProvider,
+            nonceProvider,
+            receiver,
+            sender,
+            ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000});
+
+        EXPECT_CALL(leaseIssuer, AcquireLease(_))
+            .WillOnce(Return(std::unexpected(Error::Api::MakeError(Error::Api::ErrorCondition::NotReady))))
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
+        EXPECT_CALL(nonceProvider, Next())
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x01}}})));
+        EXPECT_CALL(aeadProvider, Seal(_, _, Security::Aead::Api::Plaintext{}, _))
+            .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
+                Security::Aead::Api::Ciphertext{.Value = {std::byte{0xF0}}})));
+        EXPECT_CALL(sender, Send(_))
+            .WillOnce(Return(Error::Api::Result<void>{}));
+        EXPECT_CALL(receiver, TryReceive())
+            .Times(2)
+            .WillRepeatedly(Return(Error::Api::Result<std::optional<::PiSubmarine::Udp::Api::Datagram>>(
+                std::optional<::PiSubmarine::Udp::Api::Datagram>{std::nullopt})));
+        EXPECT_CALL(leaseIssuer, ReleaseLease(Lease::Api::LeaseId{.Value = "lease-1"}))
+            .WillOnce(Return(Error::Api::Result<void>{}));
+
+        client.Tick(std::chrono::seconds(1), std::chrono::milliseconds(10));
+        client.Tick(std::chrono::seconds(1), std::chrono::milliseconds(10));
+    }
+
+    TEST(ClientTest, KeepsCurrentLeaseWhenRenewReturnsNotReady)
+    {
+        StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
+        StrictMock<Security::Aead::Api::IProviderMock> aeadProvider;
+        StrictMock<Security::Api::INonceProviderMock> nonceProvider;
+        StrictMock<::PiSubmarine::Udp::Api::IReceiverMock> receiver;
+        StrictMock<::PiSubmarine::Udp::Api::ISenderMock> sender;
+
+        Client client(
+            leaseIssuer,
+            aeadProvider,
+            nonceProvider,
+            receiver,
+            sender,
+            ::PiSubmarine::Udp::Api::Endpoint{"127.0.0.1", 9000});
+
+        EXPECT_CALL(leaseIssuer, AcquireLease(_))
+            .WillOnce(Return(Error::Api::Result<Lease::Api::LeaseGrant>(MakeLeaseGrant())));
+        EXPECT_CALL(nonceProvider, Next())
+            .WillOnce(Return(Error::Api::Result<Security::Api::Nonce>(
+                Security::Api::Nonce{.Value = {std::byte{0x01}}})));
+        EXPECT_CALL(aeadProvider, Seal(_, _, Security::Aead::Api::Plaintext{}, _))
+            .WillOnce(Return(Error::Api::Result<Security::Aead::Api::Ciphertext>(
+                Security::Aead::Api::Ciphertext{.Value = {std::byte{0xF0}}})));
+        EXPECT_CALL(sender, Send(_))
+            .WillOnce(Return(Error::Api::Result<void>{}));
+        EXPECT_CALL(receiver, TryReceive())
+            .Times(2)
+            .WillRepeatedly(Return(Error::Api::Result<std::optional<::PiSubmarine::Udp::Api::Datagram>>(
+                std::optional<::PiSubmarine::Udp::Api::Datagram>{std::nullopt})));
+        EXPECT_CALL(leaseIssuer, RenewLease(Lease::Api::LeaseId{.Value = "lease-1"}))
+            .WillOnce(Return(std::unexpected(Error::Api::MakeError(Error::Api::ErrorCondition::NotReady))));
+        EXPECT_CALL(leaseIssuer, ReleaseLease(Lease::Api::LeaseId{.Value = "lease-1"}))
+            .WillOnce(Return(Error::Api::Result<void>{}));
+
+        client.Tick(std::chrono::seconds(1), std::chrono::milliseconds(10));
+        client.Tick(std::chrono::milliseconds(2500), std::chrono::milliseconds(10));
+    }
+
     TEST(ClientTest, UpdatesRawPayloadCacheFromAuthenticatedDatagram)
     {
         StrictMock<Lease::Api::ILeaseIssuerMock> leaseIssuer;
