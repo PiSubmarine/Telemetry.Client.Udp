@@ -34,6 +34,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
         ~Client() override;
 
         [[nodiscard]] Error::Api::Result<std::vector<std::byte>> GetRaw(const Api::ChannelId& channel) const override;
+        [[nodiscard]] bool HasLease() const noexcept;
         void Tick(const std::chrono::nanoseconds& uptime, const std::chrono::nanoseconds& deltaTime) override;
 
     private:
