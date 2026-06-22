@@ -248,6 +248,16 @@ namespace PiSubmarine::Telemetry::Client::Udp
         return iterator->second;
     }
 
+    std::optional<Lease::Api::LeaseId> Client::GetLeaseId() const noexcept
+    {
+        if (!m_Lease.has_value() || !m_LeaseSecret.has_value())
+        {
+            return std::nullopt;
+        }
+
+        return m_Lease->Id;
+    }
+
     bool Client::HasLease() const noexcept
     {
         return m_Lease.has_value() && m_LeaseSecret.has_value();
