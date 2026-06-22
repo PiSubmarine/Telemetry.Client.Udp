@@ -248,19 +248,14 @@ namespace PiSubmarine::Telemetry::Client::Udp
         return iterator->second;
     }
 
-    std::optional<Lease::Api::LeaseId> Client::GetLeaseId() const noexcept
+    std::optional<Lease::Api::Lease> Client::GetLease() const noexcept
     {
         if (!m_Lease.has_value() || !m_LeaseSecret.has_value())
         {
             return std::nullopt;
         }
 
-        return m_Lease->Id;
-    }
-
-    bool Client::HasLease() const noexcept
-    {
-        return m_Lease.has_value() && m_LeaseSecret.has_value();
+        return m_Lease;
     }
 
     void Client::Tick(const std::chrono::nanoseconds& uptime, const std::chrono::nanoseconds& deltaTime)
