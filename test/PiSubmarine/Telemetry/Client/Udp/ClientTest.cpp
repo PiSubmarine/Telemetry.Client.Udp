@@ -79,7 +79,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
         [[nodiscard]] Lease::Api::LeaseGrant MakeLeaseGrant()
         {
             return Lease::Api::LeaseGrant{
-                .Lease = Lease::Api::Lease{
+                .GrantedLease = Lease::Api::Lease{
                     .Id = Lease::Api::LeaseId{.Value = "lease-1"},
                     .Resource = Lease::Api::ResourceId{.Value = "telemetry-main"},
                     .Duration = std::chrono::milliseconds(3000)},

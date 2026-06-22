@@ -314,7 +314,7 @@ namespace PiSubmarine::Telemetry::Client::Udp
             return false;
         }
 
-        m_Lease = acquireResult->Lease;
+        m_Lease = acquireResult->GrantedLease;
         m_LeaseSecret = acquireResult->Secret;
         m_LastError.reset();
         m_NextRenewTime = uptime + ComputeRenewInterval(*m_Lease);
